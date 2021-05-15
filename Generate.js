@@ -152,7 +152,7 @@ export default class Generate{
     export(frames){
         this.rotation = 0.0;
         this.draw();
-        const step = 6.25/frames;
+        const step = (Math.PI*2)/frames;
         this.output.height = frames/10*500;
 
         return new Promise(async resolve => {
