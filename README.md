@@ -6,7 +6,7 @@ I needed a way to generate sprite-sheets for a [Phaser](https://phaser.io) proje
 ([ResourceMeJS](https://neoan.us/game)). Unfortunately, I was surprised to find the internet doesn't provide me with an easy to find solution.
 So I just built what I needed:
 
-![screen](screenshot.png)
+[![screen](screenshot.png)](https://sroehrl.github.io/planet-generator)
 
 ### Can I use it?
 
