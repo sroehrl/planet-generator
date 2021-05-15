@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Planet generator</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gaudiamus-css@1.2.6/css/gaudiamus.min.css"
+          integrity="sha256-MiQvG9qtXfqgLX6qtx/OHix+pI73B46SnZHcaLhRLTo=" crossorigin="anonymous">
+    <style>
+        html,body{
+            margin:0;
+            padding:0;
+            font-family: 'Orbitron', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-black">
+<div class="container">
+    <h1 class="text-white font-lg">Procedural Planet Generator with SpriteSheet export</h1>
+    <div class="grid lg:grid-6-6">
+        <div class="bg-gray b-2 b-primary b-rounded p-3 m-5">
+            <h3 class="text-primary font-md">1. Generate surface</h3>
+            <button id="random" class="bg-transparent text-primary b-1 cursor-pointer w-100p hover:raise-1-primary">
+                Random
+            </button>
+            <form id="setter" class="grid-6-6 text-white m-t-3">
+                <label for="seed">Seed</label>
+                <input type="text" id="seed" name="seed" class="m-b-2 b-primary b-0 b-b-2 b-rounded-2">
+                <label for="color">Color Threshold</label>
+                <div>
+                    <input onchange="changeRange(this,'color-target')" type="range" min="20" max="255" id="color" name="color"
+                           class="m-b-2 b-primary b-0 b-b-2 b-rounded-2">
+                    <span id="color-target"></span>
+                </div>
+
+                <label for="detail">Poly factor</label>
+                <input type="number" min="1" max="3" id="detail" name="detail"
+                       class="m-b-2 b-primary b-0 b-b-2 b-rounded-2">
+                <label for="ocean">Has oceans</label>
+                <input type="checkbox" id="ocean">
+                <label for="vegetation">Has vegetation</label>
+                <input type="checkbox" id="vegetation">
+                <span></span>
+                <button type="submit"
+                        class="bg-transparent text-primary b-1 cursor-pointer w-100p hover:raise-1-primary">Map
+                </button>
+            </form>
+            <h3 class="text-primary font-md">2. Generate planet</h3>
+            <button id="sphere" class="bg-transparent text-primary b-1 cursor-pointer w-100p hover:raise-1-primary">
+                Sphere
+            </button>
+            <h3 class="text-primary font-md">3. Preview</h3>
+            <button id="play" class="bg-transparent text-primary b-1 cursor-pointer w-100p hover:raise-1-primary">
+                Toggle Rotation
+            </button>
+            <h3 class="text-primary font-md">4. Export</h3>
+            <form id="export-form" class="grid lg:grid-6-6 text-white">
+                <label for="frames">Frames</label>
+                <div>
+                    <input onchange="changeRange(this,'frames-display')" step="10" value="40" type="range" min="20" max="300" id="frames" name="frames"
+                           class="m-b-2 b-primary b-0 b-b-2 b-rounded-2">
+                    <span id="frames-display">40</span>
+                </div>
+                <progress id="export-progress" style="visibility: hidden"></progress>
+                <button type="submit" class="bg-transparent text-primary b-1 cursor-pointer w-100p hover:raise-1-primary">
+                    Export Spritesheet
+                </button>
+            </form>
+        </div>
+        <section class="m-t-5">
+
+            <canvas width="500" height="500" id="planet"></canvas>
+        </section>
+    </div>
+    <section id="img-target" style="display: none">
+        <h3 class="text-white">Output</h3>
+        <article></article>
+    </section>
+
+    <canvas width="5000" id="output" style="display: none"></canvas>
+</div>
+
+<script>
+    function changeRange(ele,target){
+        document.querySelector('#'+target).innerText = ele.value
+    }
+</script>
+
+
+<script type="module">
+    import Generate from "./Generate.js";
+
+    const canvas = document.querySelector('canvas#planet');
+    const output = document.querySelector('canvas#output')
+    const generator = new Generate(canvas, output)
+    const form = document.querySelector('#setter');
+    const exportForm = document.querySelector('#export-form');
+    random()
+
+    // generator.update();
+
+    function randomSeed() {
+        return Math.random().toString(16).substr(2, 16);
+    }
+
+    function random() {
+        const seed = randomSeed();
+        const color = Math.floor(Math.random() * 255) + 20;
+        const detail = Math.floor(Math.random() * 3) + 1;
+        const ocean = Math.round(Math.random()) === 1;
+        const vegetation = Math.round(Math.random()) === 1;
+
+        writeForm(seed, color, ocean, vegetation, detail)
+        readForm();
+    }
+
+
+    function writeForm(seed, color, ocean, vegetation, detail) {
+        form.elements.seed.value = seed;
+        form.elements.color.value = color;
+        form.elements.detail.value = detail;
+        form.elements.ocean.checked = ocean;
+        form.elements.vegetation.checked = vegetation;
+    }
+
+    function readForm() {
+        let variables = [];
+        ['seed', 'color', 'ocean', 'vegetation', 'detail'].forEach(variable => {
+            variables.push(validate(form.elements[variable]));
+        })
+        generator.set(...variables)
+        generator.build();
+    }
+
+    function validate(inputElement) {
+        switch (inputElement.type) {
+            case 'checkbox':
+                return inputElement.checked;
+            case 'number':
+                return Number(inputElement.value);
+            default:
+                return inputElement.value;
+        }
+
+    }
+    function exportSpriteSheet(frames){
+        const progress = document.getElementById('export-progress');
+        const target = document.getElementById('img-target');
+        target.style.display = 'block'
+        target.querySelector('article').innerHTML = '';
+        progress.style.visibility = 'visible';
+        setTimeout(()=>{
+            generator.export(frames).then(img =>{
+                progress.style.visibility = 'hidden';
+                img.style.width = '100%';
+                target.querySelector('article').appendChild(img)
+            })
+        })
+
+    }
+    form.addEventListener('submit', ev => {
+        ev.preventDefault()
+        readForm()
+    })
+    exportForm.addEventListener('submit', ev =>{
+        ev.preventDefault();
+        exportSpriteSheet(Number(exportForm.elements.frames.value))
+    })
+
+    document.querySelector('#random').addEventListener('click', () => random())
+    document.querySelector('#sphere').addEventListener('click', () => generator.draw())
+    document.querySelector('#play').addEventListener('click', () => generator.togglePlay())
+</script>
+</body>
+</html>
