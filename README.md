@@ -7,6 +7,7 @@ I needed a way to generate sprite-sheets for a [Phaser](https://phaser.io) proje
 So I just built what I needed:
 
 [![screen](screenshot.png)](https://sroehrl.github.io/planet-generator)
+[hosted @ https://sroehrl.github.io/planet-generator](https://sroehrl.github.io/planet-generator)
 
 ### Can I use it?
 
