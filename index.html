@@ -26,7 +26,7 @@
             </button>
             <form id="setter" class="grid-6-6 text-white m-t-3">
                 <label for="seed">Seed</label>
-                <input type="text" id="seed" name="seed" class="m-b-2 b-primary b-0 b-b-2 b-rounded-2">
+                <input type="text" id="seed" name="seed" class="m-b-2 b-primary b-0 b-b-2 b-rounded-2 p-l-2">
                 <label for="color">Color Threshold</label>
                 <div>
                     <input onchange="changeRange(this,'color-target')" type="range" min="20" max="255" id="color" name="color"
@@ -36,14 +36,19 @@
 
                 <label for="detail">Poly factor</label>
                 <input type="number" min="1" max="3" id="detail" name="detail"
-                       class="m-b-2 b-primary b-0 b-b-2 b-rounded-2">
+                       class="m-b-2 b-primary b-0 b-b-2 b-rounded-2 p-l-2">
                 <label for="ocean">Has oceans</label>
                 <input type="checkbox" id="ocean">
                 <label for="vegetation">Has vegetation</label>
                 <input type="checkbox" id="vegetation">
+                <label for="direction">Spin-direction</label>
+                <select id="direction" name="direction" class="m-b-2 b-primary b-0 b-b-2 b-rounded-2 p-l-2">
+                    <option value="-1">left</option>
+                    <option value="1">right</option>
+                </select>
                 <span></span>
                 <button type="submit"
-                        class="bg-transparent text-primary b-1 cursor-pointer w-100p hover:raise-1-primary">Map
+                        class="bg-transparent text-primary b-1 cursor-pointer w-100p hover:raise-1-primary">Apply
                 </button>
             </form>
             <h3 class="text-primary font-md">2. Generate planet</h3>
@@ -110,23 +115,25 @@
         const detail = Math.floor(Math.random() * 3) + 1;
         const ocean = Math.round(Math.random()) === 1;
         const vegetation = Math.round(Math.random()) === 1;
+        const direction = 1;
 
-        writeForm(seed, color, ocean, vegetation, detail)
+        writeForm(seed, color, ocean, vegetation, detail, direction)
         readForm();
     }
 
 
-    function writeForm(seed, color, ocean, vegetation, detail) {
+    function writeForm(seed, color, ocean, vegetation, detail, direction) {
         form.elements.seed.value = seed;
         form.elements.color.value = color;
         form.elements.detail.value = detail;
         form.elements.ocean.checked = ocean;
         form.elements.vegetation.checked = vegetation;
+        form.elements.direction.value = direction;
     }
 
     function readForm() {
         let variables = [];
-        ['seed', 'color', 'ocean', 'vegetation', 'detail'].forEach(variable => {
+        ['seed', 'color', 'ocean', 'vegetation', 'detail','direction'].forEach(variable => {
             variables.push(validate(form.elements[variable]));
         })
         generator.set(...variables)

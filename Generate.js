@@ -9,6 +9,7 @@ export default class Generate{
         this.heightmapWidth = 700;
         this.heightmapHeight = 400;
         this.rotation = 0.0;
+        this.rotationDirection = -1;
         this.radius = 100;
         this.rotationSpeed = 0.05;
         this.colorThreshold = 120;
@@ -21,20 +22,21 @@ export default class Generate{
         this.outputCtx = output.getContext("2d");
         this.startingTime = undefined;
     }
-    set(seed, colorThreshold, hasWater = false, hasVegetation = false, detail = 1){
+    set(seed, colorThreshold, hasWater = false, hasVegetation = false, detail = 1, rotationDirection = -1){
         this.seed = seed;
         this.colorThreshold = colorThreshold;
         this.hasWater = hasWater;
         this.hasVegetation = hasVegetation;
         this.detail = detail;
         this.radius = detail > 1 ? (100 + (100 * detail/3)) : 100;
+        this.rotationDirection = rotationDirection;
     }
     map(c, a1, a2, b1, b2){
         return b1 + ((c-a1)/(a2-a1))*(b2-b1);
     }
     setColor(data, x, y, w, r, g, b, a){
-        for(var xx = x; xx < x+this.detail; xx++){
-            for(var yy = y; yy < y+this.detail; yy++){
+        for(let xx = x; xx < x+this.detail; xx++){
+            for(let yy = y; yy < y+this.detail; yy++){
                 data[(xx + yy*w)*4] = r;
                 data[(xx + yy*w)*4 + 1] = g;
                 data[(xx + yy*w)*4 + 2] = b;
@@ -95,19 +97,19 @@ export default class Generate{
         this.ctx.putImageData(imageData, 0, 0);
     }
     renderPlanetFrame(canvas_data, texture_data, radius, w, h, x1, x2, angle1, angle2){
-        for(var x = x1; x < x2; x++){
-            for(var y = 0; y < h; y++){
-                var phi = this.map(x, x1, x2, angle1+this.rotation, angle2+this.rotation),
+        for(let x = x1; x < x2; x++){
+            for(let y = 0; y < h; y++){
+                const phi = this.map(x, x1, x2, angle1+this.rotation, angle2+this.rotation),
                     theta = this.map(y, 0, h-1, Math.PI, 0);
 
-                var r = texture_data[(x + y*w)*4],
+                const r = texture_data[(x + y*w)*4],
                     g = texture_data[(x + y*w)*4 + 1],
                     b = texture_data[(x + y*w)*4 + 2],
                     a = texture_data[(x + y*w)*4 + 3];
 
-                var rad = radius;
+                const rad = radius;
 
-                var zz = rad*Math.abs(Math.sin(theta))*Math.sin(phi),
+                const zz = rad*Math.abs(Math.sin(theta))*Math.sin(phi),
                     xx = Math.round(rad*Math.abs(Math.sin(theta))*Math.cos(phi)) + 250,
                     yy = Math.round(rad*Math.cos(theta)) + 250;
                 if(zz >= 0){
@@ -121,9 +123,10 @@ export default class Generate{
         this.ctx.fillRect(0, 0, 500, 500);
         const imageData = this.ctx.createImageData(500, 500);
         const data = imageData.data;
-        // make transparent
-        for(var x = 0; x < 500; x++){
-            for(var y = 0; y < 500; y++){
+        // FOR now: make transparent
+        // later: hook in moon(s)?
+        for(let x = 0; x < 500; x++){
+            for(let y = 0; y < 500; y++){
                 this.setColor(data, x, y, 500, 0, 0, 0, 0);
             }
         }
@@ -145,11 +148,12 @@ export default class Generate{
         }
         this.draw();
 
-        this.rotation -= this.rotationSpeed;
+        this.rotation -= (this.rotationDirection * this.rotationSpeed);
         window.requestAnimationFrame(this.update.bind(this));
 
     }
     export(frames){
+        this.playing = false;
         this.rotation = 0.0;
         this.draw();
         const step = (Math.PI*2)/frames;
@@ -174,7 +178,7 @@ export default class Generate{
     }
     exportFrames(frames, step, currentFrame){
 
-        this.rotation -= step;
+        this.rotation -= (step * this.rotationDirection);
         this.draw();
         return new Promise(resolve => {
             const img = new Image(500,500);
